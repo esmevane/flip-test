@@ -1,7 +1,13 @@
 import * as React from 'react';
+import { Flipped, Flipper } from 'react-flip-toolkit';
 import styled from 'styled-components';
 
 const listData = [1, 2, 3];
+
+const shouldFlip = (index: number) => (
+  prevDecisionData: any,
+  currentDecisionData: any
+) => index === prevDecisionData || index === currentDecisionData;
 
 // tslint:disable-next-line:interface-name
 interface Focuses {
@@ -14,7 +20,7 @@ interface ListItemProps {
   onClick: (index: number) => any;
 }
 
-const StaggeredListContent = styled.div`
+const StaggeredListContent = styled(Flipper)`
   width: 400px;
   margin: 2rem auto;
 `;
@@ -138,36 +144,65 @@ const ExpandedListItemAdditionalContent = styled.div`
 `;
 
 const ListItem = ({ index, onClick }: ListItemProps) => (
-  // tslint:disable-next-line:jsx-no-lambda
-  <ListItemWrapper onClick={() => onClick(index)}>
-    <ListItemContent>
-      <ListItemAvatar />
-      <ListItemDescription>
-        {listData.map((i) => (
-          <div key={i} />
-        ))}
-      </ListItemDescription>
-    </ListItemContent>
-  </ListItemWrapper>
+  <Flipped
+    stagger="card"
+    shouldInvert={shouldFlip(index)}
+    flipId={`list_item_${index}`}
+  >
+    <ListItemWrapper onClick={() => onClick(index)}>
+      <Flipped inverseFlipId={`list_item_${index}`}>
+        <ListItemContent>
+          <Flipped
+            stagger="card-content"
+            flipId={`list_item_avatar_${index}`}
+            shouldFlip={shouldFlip(index)}
+          >
+            <ListItemAvatar />
+          </Flipped>
+          <ListItemDescription>
+            {listData.map((i) => (
+              <Flipped
+                stagger="card-content"
+                shouldFlip={shouldFlip(index)}
+                flipId={`list_item_description_${index}-${i}`}
+              >
+                <div key={i} />
+              </Flipped>
+            ))}
+          </ListItemDescription>
+        </ListItemContent>
+      </Flipped>
+    </ListItemWrapper>
+  </Flipped>
 );
 
 const ExpandedListItem = ({ index, onClick }: ListItemProps) => (
-  // tslint:disable-next-line:jsx-no-lambda
-  <ExpandedListItemWrapper onClick={() => onClick(index)}>
-    <ExpandedListItemContent>
-      <ExpandedListItemAvatar />
-      <ExpandedListItemDescription>
-        {listData.map((i) => (
-          <div key={i} />
-        ))}
-      </ExpandedListItemDescription>
-      <ExpandedListItemAdditionalContent>
-        {listData.map((i) => (
-          <div key={i} />
-        ))}
-      </ExpandedListItemAdditionalContent>
-    </ExpandedListItemContent>
-  </ExpandedListItemWrapper>
+  <Flipped stagger="card" flipId={`list_item_${index}`}>
+    <ExpandedListItemWrapper onClick={() => onClick(index)}>
+      <Flipped inverseFlipId={`list_item_${index}`}>
+        <ExpandedListItemContent>
+          <Flipped stagger="card-content" flipId={`list_item_avatar_${index}`}>
+            <ExpandedListItemAvatar />
+          </Flipped>
+          <ExpandedListItemDescription>
+            {listData.map((i) => (
+              <Flipped
+                stagger="card-content"
+                flipId={`list_item_description_${index}-${i}`}
+              >
+                <div key={i} />
+              </Flipped>
+            ))}
+          </ExpandedListItemDescription>
+          <ExpandedListItemAdditionalContent>
+            {listData.map((i) => (
+              <div key={i} />
+            ))}
+          </ExpandedListItemAdditionalContent>
+        </ExpandedListItemContent>
+      </Flipped>
+    </ExpandedListItemWrapper>
+  </Flipped>
 );
 
 class AnimatedList extends React.Component<any, Focuses> {
@@ -180,7 +215,17 @@ class AnimatedList extends React.Component<any, Focuses> {
 
   public render() {
     return (
-      <StaggeredListContent>
+      <StaggeredListContent
+        decisionData={this.state.focused}
+        flipKey={this.state.focused}
+        spring="gentle"
+        staggerConfig={{
+          card: {
+            reverse: this.state.focused !== null,
+            speed: 0.5,
+          },
+        }}
+      >
         <ListContainer>
           {listData.map((index) => (
             <ListItemContainer key={index}>
